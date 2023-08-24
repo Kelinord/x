@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Trading Game</title>
+    <style>
+        #game {
+            text-align: center;
+        }
+        #inventory {
+            list-style-type: none;
+            padding: 0;
+        }
+        .green-arrow {
+            color: green;
+        }
+        .red-arrow {
+            color: red;
+        }
+    </style>
+</head>
+<body id="body" style="background-color: white;">
+    <div id="game">
+        <h1 id="welcome">Welcome to Earth</h1>
+        <button onclick="adventure()">Go on Adventure</button>
+        <button onclick="buy('iron')" id="buyIron">Buy Iron</button>
+        <button onclick="buy('gold')" id="buyGold">Buy Gold</button>
+        <button onclick="buy('silver')" id="buySilver">Buy Silver</button>
+        <button onclick="buy('fuel')" id="buyFuel">Buy Fuel</button>
+        <button onclick="sell('iron')" id="sellIron">Sell Iron</button>
+        <button onclick="sell('gold')" id="sellGold">Sell Gold</button>
+        <button onclick="sell('silver')" id="sellSilver">Sell Silver</button>
+        <button onclick="sell('alienArtifact')" id="sellAlienArtifact">Sell Alien Artifact</button>
+        <button onclick="sell('rareElement')" id="sellRareElement">Sell Rare Element</button>
+        <button onclick="examine()">Examine Alien Artifact</button>
+        <button onclick="repair()" id="repairButton">Repair Ship</button>
+        <div id="planetButtons"></div>
+        <div id="fuel">Fuel: 100</div>
+        <div id="health">Health: 100</div>
+        <div id="currency">Currency: 100</div>
+        <ul id="inventory">Inventory: </ul>
+        <div id="log">Log: </div>
+    </div>
+    <script>
+        // Game variables
+        var fuel = 100;
+        var health = 100;
+        var currency = 100;
+        var inventory = { iron: 0, gold: 0, silver: 0, alienArtifact: 0, rareElement: 0 };
+        var currentPlanet = "Earth";
+        var planets = {
+          Earth: { fuelCost: 10, goods: { iron: 5, gold: 10, silver: 8, fuel: 50 }, adventures: ["A calm journey.", "A peaceful ride.", "A thrilling ride.", "A dangerous expedition."] },
+          Mars: { fuelCost: 20, goods: { iron: 7, gold: 12, silver: 9, fuel: 60 }, adventures: ["A thrilling ride.", "A dangerous expedition.", "A calm journey.", "A peaceful ride."] },
+          // Add more planets here
+        };
+
+        // Adventure function
+        function adventure() {
+          if (fuel < 10) {
+            alert("Not enough fuel for an adventure!");
+            return;
+          }
+          fuel -= 10; // Adventure fuel cost
+          document.getElementById('body').style.backgroundColor = "black"; // Change background to black
+          var adventureLog = planets[currentPlanet].adventures[Math.floor(Math.random() * planets[currentPlanet].adventures.length)];
+          var peaceful = adventureLog.includes("calm") || adventureLog.includes("peaceful");
+          if (Math.random() < 0.3 || peaceful) { // 30% chance of success or peaceful adventure
+            if (Math.random() < 0.1) { // 10% chance of finding an alien artifact
+              var item = "alienArtifact";
+              inventory[item] += 1;
+              adventureLog += " Successful mission! Found an " + item + "!";
+            } else {
+              var item = "silver"; // Finding silver
+              inventory[item] += 5;
+              adventureLog += " Successful mission! Found some " + item + "!";
+            }
+          } else {
+            var damage = peaceful ? 0 : Math.floor(Math.random() * 10); // Random damage if not peaceful
+            health -= damage;
+            var item = "iron"; // Finding iron
+            inventory[item] += 5;
+            adventureLog += " Took " + damage + " damage. Found some " + item + "!";
+          }
+
+          if (health <= 0) {
+            adventureLog += " Your ship was destroyed! Game Over.";
+            // End the game
+            document.getElementById('game').innerHTML = "<h1>Game Over</h1>";
+            return;
+          }
+
+          document.getElementById('log').innerText = adventureLog;
+          document.getElementById('body').style.backgroundColor = "white"; // Change background back to white
+          updateDisplay();
+        }
+
+        // Buy function
+        function buy(item) {
+          var price = planets[currentPlanet].goods[item];
+          if (currency >= price) {
+            currency -= price;
+            if (item === 'fuel') {
+              fuel = 100; // Fill the fuel
+            } else {
+              inventory[item] += 1;
+            }
+          } else {
+            alert("Not enough currency!");
+          }
+          updateDisplay();
+        }
+
+        // Sell function
+        function sell(item) {
+          if (inventory[item] > 0) {
+            var price = item === "alienArtifact" ? 20 : item === "rareElement" ? 40 : planets[currentPlanet].goods[item]; // Alien artifacts and rare elements are more valuable
+            currency += price;
+            inventory[item] -= 1;
+          } else {
+            alert("You don't have that item!");
+          }
+          updateDisplay();
+        }
+
+        // Examine function
+        function examine() {
+          if (inventory["alienArtifact"] > 0) {
+            if (Math.random() < 0.5) { // 50% chance to discover rare element
+              var item = "rareElement";
+              inventory[item] = (inventory[item] || 0) + 1;
+              inventory["alienArtifact"] -= 1;
+              alert("You discovered a rare element!");
+            } else {
+              inventory["alienArtifact"] -= 1;
+              alert("The artifact was destroyed during examination!");
+            }
+          } else {
+            alert("You don't have an alien artifact to examine!");
+          }
+          updateDisplay();
+        }
+
+        // Repair function
+        function repair() {
+          if (health < 50) {
+            if (currency >= 50) { // Repair cost
+              currency -= 50;
+              health = 100;
+            } else {
+              alert("Not enough currency to repair!");
+            }
+          } else {
+            alert("Your ship doesn't need repair!");
+          }
+          updateDisplay();
+        }
+
+        // Leave Planet function
+        function leavePlanet(destination) {
+          var fuelCost = planets[destination].fuelCost;
+         
+          if (fuel >= fuelCost) {
+            fuel -= fuelCost;
+            currentPlanet = destination;
+          } else {
+            alert("Not enough fuel!");
+          }
+          document.getElementById('welcome').innerText = "Welcome to " + destination;
+          updateButtons();
+          updateDisplay();
+        }
+
+        // Update the game display
+        function updateDisplay() {
+          document.getElementById('fuel').innerText = "Fuel: " + fuel;
+          document.getElementById('health').innerText = "Health: " + health;
+          document.getElementById('currency').innerText = "Currency: " + currency;
+          var inventoryList = document.getElementById('inventory');
+          inventoryList.innerHTML = "Inventory: ";
+          for (var item in inventory) {
+            if (inventory[item] > 0) {
+              var listItem = document.createElement('li');
+              listItem.innerText = item + ": " + inventory[item];
+              inventoryList.appendChild(listItem);
+            }
+          }
+          if (health < 50) {
+            document.getElementById('repairButton').style.display = "inline"; // Show repair button if health is below 50
+          } else {
+            document.getElementById('repairButton').style.display = "none"; // Hide repair button if health is 50 or above
+          }
+        }
+
+        // Update buttons with prices and arrows
+        function updateButtons() {
+          var buttons = ['buyIron', 'buyGold', 'buySilver', 'buyFuel', 'sellIron', 'sellGold', 'sellSilver', 'sellAlienArtifact', 'sellRareElement'];
+          buttons.forEach(function(buttonId) {
+            var item = buttonId.replace('buy', '').replace('sell', '').toLowerCase();
+            var price = planets[currentPlanet].goods[item];
+            var earthPrice = planets['Earth'].goods[item];
+            var arrow = price > earthPrice ? "<span class='green-arrow'>↑</span>" : price < earthPrice ? "<span class='red-arrow'>↓</span>" : "";
+            document.getElementById(buttonId).innerHTML = (buttonId.includes('buy') ? "Buy " : "Sell ") + item.charAt(0).toUpperCase() + item.slice(1) + " " + price + " " + arrow;
+          });
+          updatePlanetButtons();
+        }
+
+        // Update planet buttons
+        function updatePlanetButtons() {
+          var buttonsDiv = document.getElementById('planetButtons');
+          buttonsDiv.innerHTML = "";
+          for (var planet in planets) {
+            if (planet !== currentPlanet) {
+              var button = document.createElement('button');
+              button.innerText = "Go to " + planet;
+              button.onclick = (function(p) { return function() { leavePlanet(p); }; })(planet);
+              buttonsDiv.appendChild(button);
+            }
+          }
+        }
+
+        // Call updateDisplay and updateButtons to initialize the game display
+        updateDisplay();
+        updateButtons();
+    </script>
+</body>
+</html>
