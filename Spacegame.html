@@ -205,7 +205,7 @@
           updatePlanetButtons();
         }
 
-        // Update planet buttons
+                // Update planet buttons
         function updatePlanetButtons() {
           var buttonsDiv = document.getElementById('planetButtons');
           buttonsDiv.innerHTML = "";
@@ -219,9 +219,12 @@
           }
         }
 
-        // Call updateDisplay and updateButtons to initialize the game display
+
+                // Call updateDisplay and updateButtons to initialize the game display
         updateDisplay();
         updateButtons();
+        updatePlanetButtons(); // Add this line to initialize the planet buttons
+
     </script>
 </body>
 </html>
